@@ -7,6 +7,8 @@ import com.eventledger.model.EventRequest;
 import com.eventledger.model.EventResult;
 import com.eventledger.model.PagedResponse;
 import com.eventledger.repository.EventRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -18,6 +20,8 @@ import java.util.List;
 @Service
 public class EventService {
 
+    private static final Logger log = LoggerFactory.getLogger(EventService.class);
+
     private final EventRepository eventRepository;
 
     public EventService(EventRepository eventRepository) {
@@ -27,9 +31,12 @@ public class EventService {
     public EventResult submitEvent(EventRequest request) {
         Event event = mapToEntity(request);
         try {
-            return new EventResult(eventRepository.save(event), true);
+            Event saved = eventRepository.save(event);
+            log.info("Event created: eventId={}, accountId={}, type={}, amount={}",
+                    saved.getEventId(), saved.getAccountId(), saved.getType(), saved.getAmount());
+            return new EventResult(saved, true);
         } catch (DataIntegrityViolationException e) {
-            // Duplicate eventId — race-safe: DB constraint caught it, return the original
+            log.warn("Duplicate eventId received, returning original: eventId={}", request.getEventId());
             Event existing = eventRepository.findById(request.getEventId())
                     .orElseThrow(() -> new IllegalStateException(
                             "Event not found after duplicate key violation: " + request.getEventId()));
@@ -48,9 +55,11 @@ public class EventService {
     }
 
     public BalanceResponse getBalance(String accountId) {
+        log.debug("Computing balance for accountId={}", accountId);
         BigDecimal balance = eventRepository.computeBalance(accountId);
         List<String> currencies = eventRepository.findCurrenciesByAccountId(accountId);
         String currency = currencies.isEmpty() ? "USD" : currencies.get(0);
+        log.debug("Balance result for accountId={}: {} {}", accountId, balance, currency);
         return new BalanceResponse(accountId, balance, currency);
     }
 
