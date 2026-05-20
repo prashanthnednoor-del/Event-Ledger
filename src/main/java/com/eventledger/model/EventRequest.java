@@ -1,5 +1,6 @@
 package com.eventledger.model;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
@@ -7,6 +8,8 @@ import jakarta.validation.constraints.Positive;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Map;
+
+@Schema(description = "Inbound transaction event payload")
 
 public class EventRequest {
 
