@@ -1,5 +1,6 @@
 package com.eventledger.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
@@ -30,6 +31,7 @@ public class Event {
     @Column(name = "event_timestamp", nullable = false)
     private Instant eventTimestamp;
 
+    @JsonIgnore
     @Column(name = "received_at", nullable = false)
     private Instant receivedAt;
 
