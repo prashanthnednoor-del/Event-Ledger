@@ -1,5 +1,6 @@
 package com.eventledger.model;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -19,6 +20,7 @@ public class Event {
     @Column(nullable = false)
     private String type;
 
+    @JsonSerialize(using = BigDecimalScaleSerializer.class)
     @Column(nullable = false, precision = 19, scale = 4)
     private BigDecimal amount;
 
