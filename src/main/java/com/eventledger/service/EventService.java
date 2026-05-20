@@ -1,11 +1,16 @@
 package com.eventledger.service;
 
+import com.eventledger.exception.EventNotFoundException;
+import com.eventledger.model.BalanceResponse;
 import com.eventledger.model.Event;
 import com.eventledger.model.EventRequest;
 import com.eventledger.model.EventResult;
 import com.eventledger.repository.EventRepository;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+
+import java.math.BigDecimal;
+import java.util.List;
 
 @Service
 public class EventService {
@@ -27,6 +32,22 @@ public class EventService {
                             "Event not found after duplicate key violation: " + request.getEventId()));
             return new EventResult(existing, false);
         }
+    }
+
+    public Event getEvent(String eventId) {
+        return eventRepository.findById(eventId)
+                .orElseThrow(() -> new EventNotFoundException(eventId));
+    }
+
+    public List<Event> listByAccount(String accountId) {
+        return eventRepository.findByAccountIdOrderByEventTimestampAsc(accountId);
+    }
+
+    public BalanceResponse getBalance(String accountId) {
+        BigDecimal balance = eventRepository.computeBalance(accountId);
+        List<String> currencies = eventRepository.findCurrenciesByAccountId(accountId);
+        String currency = currencies.isEmpty() ? "USD" : currencies.get(0);
+        return new BalanceResponse(accountId, balance, currency);
     }
 
     private Event mapToEntity(EventRequest request) {
