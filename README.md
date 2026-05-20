@@ -133,6 +133,28 @@ Returns `balance: 0.00` for accounts with no events.
 
 ---
 
+## Docker
+
+Run the full application with a single command (no Java or Maven install required):
+
+```bash
+docker compose up
+```
+
+The API starts on **http://localhost:8080**. To rebuild after code changes:
+
+```bash
+docker compose up --build
+```
+
+To stop:
+
+```bash
+docker compose down
+```
+
+---
+
 ## Swagger UI
 
 Interactive API documentation is available at:
