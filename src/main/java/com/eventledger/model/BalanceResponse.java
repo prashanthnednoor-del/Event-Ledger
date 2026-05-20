@@ -1,7 +1,9 @@
 package com.eventledger.model;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.math.BigDecimal;
 
+@Schema(description = "Computed net balance for an account")
 public class BalanceResponse {
 
     private String accountId;
