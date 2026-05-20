@@ -3,13 +3,12 @@ package com.eventledger.controller;
 import com.eventledger.model.Event;
 import com.eventledger.model.EventRequest;
 import com.eventledger.model.EventResult;
+import com.eventledger.model.PagedResponse;
 import com.eventledger.service.EventService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/events")
@@ -35,7 +34,10 @@ public class EventController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Event>> listEvents(@RequestParam String account) {
-        return ResponseEntity.ok(eventService.listByAccount(account));
+    public ResponseEntity<PagedResponse<Event>> listEvents(
+            @RequestParam String account,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return ResponseEntity.ok(eventService.listByAccount(account, page, size));
     }
 }

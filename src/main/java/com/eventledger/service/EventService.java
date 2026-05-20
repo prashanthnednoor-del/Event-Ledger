@@ -5,8 +5,11 @@ import com.eventledger.model.BalanceResponse;
 import com.eventledger.model.Event;
 import com.eventledger.model.EventRequest;
 import com.eventledger.model.EventResult;
+import com.eventledger.model.PagedResponse;
 import com.eventledger.repository.EventRepository;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -39,8 +42,9 @@ public class EventService {
                 .orElseThrow(() -> new EventNotFoundException(eventId));
     }
 
-    public List<Event> listByAccount(String accountId) {
-        return eventRepository.findByAccountIdOrderByEventTimestampAsc(accountId);
+    public PagedResponse<Event> listByAccount(String accountId, int page, int size) {
+        PageRequest pageable = PageRequest.of(page, size, Sort.by("eventTimestamp").ascending());
+        return new PagedResponse<>(eventRepository.findByAccountId(accountId, pageable));
     }
 
     public BalanceResponse getBalance(String accountId) {

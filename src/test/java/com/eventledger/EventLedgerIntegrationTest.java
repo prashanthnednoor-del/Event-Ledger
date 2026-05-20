@@ -144,9 +144,46 @@ class EventLedgerIntegrationTest {
 
         mockMvc.perform(get("/events").param("account", "acct-2"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].eventId").value("evt-a"))
-                .andExpect(jsonPath("$[1].eventId").value("evt-b"))
-                .andExpect(jsonPath("$[2].eventId").value("evt-c"));
+                .andExpect(jsonPath("$.content[0].eventId").value("evt-a"))
+                .andExpect(jsonPath("$.content[1].eventId").value("evt-b"))
+                .andExpect(jsonPath("$.content[2].eventId").value("evt-c"))
+                .andExpect(jsonPath("$.totalElements").value(3))
+                .andExpect(jsonPath("$.totalPages").value(1))
+                .andExpect(jsonPath("$.page").value(0))
+                .andExpect(jsonPath("$.size").value(20));
+    }
+
+    @Test
+    void pagination_secondPageReturnsCorrectEvents() throws Exception {
+        // Post 5 events, request page 1 with size 2 — should return events 3 and 4
+        postEvent("evt-p1", "acct-page", "CREDIT", "10.00", "2026-05-15T10:00:00Z");
+        postEvent("evt-p2", "acct-page", "CREDIT", "10.00", "2026-05-15T11:00:00Z");
+        postEvent("evt-p3", "acct-page", "CREDIT", "10.00", "2026-05-15T12:00:00Z");
+        postEvent("evt-p4", "acct-page", "CREDIT", "10.00", "2026-05-15T13:00:00Z");
+        postEvent("evt-p5", "acct-page", "CREDIT", "10.00", "2026-05-15T14:00:00Z");
+
+        mockMvc.perform(get("/events").param("account", "acct-page")
+                        .param("page", "1").param("size", "2"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].eventId").value("evt-p3"))
+                .andExpect(jsonPath("$.content[1].eventId").value("evt-p4"))
+                .andExpect(jsonPath("$.totalElements").value(5))
+                .andExpect(jsonPath("$.totalPages").value(3))
+                .andExpect(jsonPath("$.page").value(1))
+                .andExpect(jsonPath("$.size").value(2));
+    }
+
+    @Test
+    void pagination_emptyPage_returnsEmptyContent() throws Exception {
+        postEvent("evt-ep1", "acct-empty-page", "CREDIT", "10.00", "2026-05-15T10:00:00Z");
+
+        // Page 5 of a 1-event account — no content but valid response
+        mockMvc.perform(get("/events").param("account", "acct-empty-page")
+                        .param("page", "5").param("size", "20"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").isEmpty())
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.totalPages").value(1));
     }
 
     @Test
