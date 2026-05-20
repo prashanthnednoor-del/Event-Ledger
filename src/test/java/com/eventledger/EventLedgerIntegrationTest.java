@@ -382,6 +382,37 @@ class EventLedgerIntegrationTest {
                 .andExpect(jsonPath("$.messages").exists());
     }
 
+    // ── Correlation ID ───────────────────────────────────────────────────────────
+
+    @Test
+    void correlationId_generatedWhenNotProvided() throws Exception {
+        String correlationId = mockMvc.perform(post("/events")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(eventJson("evt-cor-1", "acct-cor", "CREDIT", "10.00", "2026-05-15T10:00:00Z")))
+                .andExpect(status().isCreated())
+                .andReturn()
+                .getResponse()
+                .getHeader("X-Correlation-Id");
+
+        assertThat(correlationId).isNotBlank();
+    }
+
+    @Test
+    void correlationId_echoedFromRequestHeader() throws Exception {
+        String provided = "my-trace-abc-123";
+
+        String returned = mockMvc.perform(post("/events")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header("X-Correlation-Id", provided)
+                        .content(eventJson("evt-cor-2", "acct-cor", "CREDIT", "10.00", "2026-05-15T11:00:00Z")))
+                .andExpect(status().isCreated())
+                .andReturn()
+                .getResponse()
+                .getHeader("X-Correlation-Id");
+
+        assertThat(returned).isEqualTo(provided);
+    }
+
     // ── Helpers ──────────────────────────────────────────────────────────────────
 
     private void postEvent(String eventId, String accountId, String type, String amount, String timestamp)
