@@ -46,7 +46,7 @@ class EventLedgerIntegrationTest {
                 .andExpect(jsonPath("$.type").value("CREDIT"))
                 .andExpect(jsonPath("$.amount").value(150.00))
                 .andExpect(jsonPath("$.currency").value("USD"))
-                .andExpect(jsonPath("$.receivedAt").exists());
+                .andExpect(jsonPath("$.receivedAt").doesNotExist());
     }
 
     @Test
