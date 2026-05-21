@@ -2,6 +2,7 @@ package com.eventledger.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -35,6 +36,7 @@ public class Event {
     @Column(name = "received_at", nullable = false)
     private Instant receivedAt;
 
+    @Schema(nullable = true)
     @Convert(converter = MapToJsonConverter.class)
     @Column(columnDefinition = "TEXT")
     private Map<String, Object> metadata;
