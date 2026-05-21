@@ -1,5 +1,9 @@
 # Event Ledger API
 
+[![Coverage Gate](https://github.com/prashanthnednoor-del/Event-Ledger/actions/workflows/coverage-gate.yml/badge.svg)](https://github.com/prashanthnednoor-del/Event-Ledger/actions/workflows/coverage-gate.yml)
+[![Mutation Testing](https://github.com/prashanthnednoor-del/Event-Ledger/actions/workflows/mutation-testing.yml/badge.svg)](https://github.com/prashanthnednoor-del/Event-Ledger/actions/workflows/mutation-testing.yml)
+[![Regression Guard](https://github.com/prashanthnednoor-del/Event-Ledger/actions/workflows/regression.yml/badge.svg)](https://github.com/prashanthnednoor-del/Event-Ledger/actions/workflows/regression.yml)
+
 A REST API that receives financial transaction events from multiple upstream systems, enforces idempotency, tolerates out-of-order delivery, and computes accurate account balances.
 
 ---
@@ -59,11 +63,17 @@ mvn test
 
 Expected output:
 ```
-Tests run: 18, Failures: 0, Errors: 0, Skipped: 0
+Tests run: 80, Failures: 0, Errors: 0, Skipped: 0
 BUILD SUCCESS
 ```
 
 The test suite uses an H2 in-memory database and requires no external dependencies. Each test starts with a clean database state.
+
+To also enforce the 85% line coverage threshold:
+
+```bash
+mvn verify
+```
 
 ---
 
@@ -198,5 +208,11 @@ src/
 │       ├── EventNotFoundException.java  ← 404 trigger
 │       └── ErrorResponse.java           ← error response shape
 └── test/java/com/eventledger/
-    └── EventLedgerIntegrationTest.java  ← 18 integration tests
+    ├── EventLedgerIntegrationTest.java  ← 26 end-to-end integration tests
+    ├── ContractVerificationTest.java    ← OpenAPI contract verification
+    ├── controller/                      ← @WebMvcTest unit tests
+    ├── service/                         ← Mockito unit tests
+    ├── filter/                          ← Mockito unit tests
+    ├── model/                           ← plain JUnit 5 unit tests
+    └── exception/                       ← plain JUnit 5 unit tests
 ```

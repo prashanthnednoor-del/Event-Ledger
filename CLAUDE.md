@@ -48,7 +48,13 @@ src/main/java/com/eventledger/
     └── ErrorResponse.java            ← {status, error, messages[]}
 ```
 
-Single test class: `src/test/java/com/eventledger/EventLedgerIntegrationTest.java` — 20 tests.
+**80 tests** across two suites:
+
+| Suite | Class(es) | Style | Count |
+|-------|-----------|-------|-------|
+| Integration | `EventLedgerIntegrationTest.java` | `@SpringBootTest` + `@AutoConfigureMockMvc` + real H2 | 26 |
+| Unit | `service/`, `controller/`, `filter/`, `model/`, `exception/` | Mockito (`@ExtendWith(MockitoExtension.class)`) or `@WebMvcTest` | 48 |
+| Contract | `ContractVerificationTest.java` | `@SpringBootTest(RANDOM_PORT)` + swagger-request-validator | 6 |
 
 ---
 
@@ -90,7 +96,7 @@ Uses the currency from the account's earliest event (`findCurrenciesByAccountId`
 - **No Lombok** — all getters/setters/constructors are written explicitly
 - **No MapStruct** — mapping from `EventRequest` → `Event` is in `EventService.mapToEntity()`
 - **Validation on DTO only** — `EventRequest` carries `@NotBlank`, `@Positive`, `@Pattern` etc.; the `Event` entity has no validation annotations
-- **Integration tests only** — `@SpringBootTest + @AutoConfigureMockMvc`, no unit tests with mocks. `@BeforeEach` calls `eventRepository.deleteAll()` to isolate each test
+- **Two test styles** — integration tests use `@SpringBootTest + @AutoConfigureMockMvc` with real H2; unit tests use `@ExtendWith(MockitoExtension.class)` + `@Mock`/`@InjectMocks` for service/filter, or `@WebMvcTest` for controllers. `@BeforeEach` calls `eventRepository.deleteAll()` in all Spring-context tests
 - **OpenAPI annotations** — all endpoints use `@Tag`, `@Operation`, `@ApiResponse`, `@Parameter`; all DTOs use `@Schema`
 - **Java text blocks** — used in tests for JSON payloads (`""" ... """`)
 
@@ -110,6 +116,29 @@ Uses the currency from the account's earliest event (`findCurrenciesByAccountId`
 | Container | Docker (multi-stage: maven:3.9-eclipse-temurin-21-alpine → eclipse-temurin:21-jre-alpine) |
 
 H2 console available at `http://localhost:8080/h2-console` (JDBC URL: `jdbc:h2:mem:eventledger`, user: `sa`, no password).
+
+---
+
+## QA Agent Pipeline
+
+Five automated agents guard quality — see `docs/qa-agent-pipeline.md` for full detail.
+
+| Agent | Trigger | Gate |
+|-------|---------|------|
+| `/test-first` (Claude Code command) | Local, before writing a method | Generates failing tests first |
+| Coverage Gate (`.github/workflows/coverage-gate.yml`) | PR → main | Line coverage ≥ 85% (`mvn verify`) |
+| Mutation Testing (`.github/workflows/mutation-testing.yml`) | Weekly cron + manual | Mutation score ≥ 70% (PIT) |
+| Regression Guard (`.github/workflows/regression.yml`) | Push → main | Zero PASS→FAIL changes (surefire diff) |
+| Contract Verification (`ContractVerificationTest.java`) | Every `mvn test` | All responses match OpenAPI spec |
+
+**Coverage commands:**
+```bash
+mvn verify                                              # all tests + coverage check (≥85%)
+mvn test-compile org.pitest:pitest-maven:mutationCoverage  # mutation score report
+mvn test -Dtest="ContractVerificationTest"              # contract validation only
+mvn test -Dtest="!*IntegrationTest"                     # unit tests only
+mvn test -Dtest="*IntegrationTest"                      # integration tests only
+```
 
 ---
 
