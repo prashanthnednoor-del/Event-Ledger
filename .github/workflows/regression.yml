@@ -1,0 +1,39 @@
+name: Regression Guard
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Run integration tests
+        run: mvn test -Dtest="*IntegrationTest"
+
+      - name: Download previous test results
+        uses: dawidd6/action-download-artifact@v3
+        continue-on-error: true
+        with:
+          name: surefire-results
+          path: previous-results/
+
+      - name: Diff test results
+        run: python3 .github/scripts/diff-surefire.py
+
+      - name: Save current test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-results
+          path: target/surefire-reports/
+          overwrite: true
